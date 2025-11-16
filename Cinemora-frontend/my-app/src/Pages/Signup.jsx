@@ -16,7 +16,7 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await API.post('/signup', formData);
+      const res = await API.post("/signup", formData);
 
       console.log("Signup response:", res.status, res.data);
 

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./CSS/LoginSignup.css";
+import API from "../utils/api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      axios.post("https://cinemora-jumy.onrender.com/login", formData)
+      const res = await API.post("/login", formData);
 
       console.log("Login response:", res.status, res.data);
 
