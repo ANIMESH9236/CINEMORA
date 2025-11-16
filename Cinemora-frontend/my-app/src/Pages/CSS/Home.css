@@ -1,0 +1,74 @@
+.home-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .hero-content {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    max-width: 700px;
+    width: 90%;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  
+  .hero-title span {
+    color: #00b4d8;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    color: #d1e8ff;
+  }
+  
+  .button-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .btn {
+    text-decoration: none;
+    padding: 12px 28px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: 0.3s ease;
+  }
+  
+  .login-btn {
+    background-color: #00b4d8;
+    color: #fff;
+  }
+  
+  .signup-btn {
+    background-color: transparent;
+    border: 2px solid #00b4d8;
+    color: #00b4d8;
+  }
+  
+  .explore-btn {
+    background-color: #ff9f1c;
+    color: #fff;
+  }
+  
+  .btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  
