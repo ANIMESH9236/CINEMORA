@@ -15,7 +15,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post("http://127.0.0.1:5001/login", formData, {
+      const res = await axios.post("https://cinemora-jumy.onrender.com", formData, {
         headers: { "Content-Type": "application/json" }
       });
       

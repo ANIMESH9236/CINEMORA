@@ -12,13 +12,13 @@ const app = express();
 app.use(express.json());
 
 // Allow your frontend (Vite default: localhost:5173)
-// app.use(cors({
-//   origin: 'http://localhost:5173',
-//   methods: ['GET', 'POST'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
+app.use(cors({
+  origin: 'https://cinemora-d2k2.vercel.app/',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(cors()); // allow all origins for debugging (dev only)
+// app.use(cors()); // allow all origins for debugging (dev only)
 
 // simple request logger to confirm requests are arriving
 app.use((req, res, next) => {
