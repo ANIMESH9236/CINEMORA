@@ -11,25 +11,44 @@ const app = express();
 
 app.use(express.json());
 
-// Allow your frontend (Vite default: localhost:5173)
+// --- CORS setup ---
+// You can set ALLOWED_ORIGINS in .env as a comma-separated list, e.g.
+// ALLOWED_ORIGINS=https://cinemora-d2k2.vercel.app,https://cinemora-jumy.onrender.com,http://localhost:5173
+const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://cinemora-d2k2.vercel.app,https://cinemora-jumy.onrender.com,http://localhost:5173';
+const allowedOrigins = rawAllowed.split(',').map(s => s.trim()).filter(Boolean);
+
+// CORS middleware with explicit origin check (no trailing slashes)
 app.use(cors({
-  origin: 'https://cinemora-d2k2.vercel.app/',
-  methods: ['GET', 'POST'],
+  origin: function(origin, callback) {
+    // allow requests with no origin (curl, mobile apps, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // If origin is not allowed, return an error (caught by error handler below)
+    return callback(new Error('CORS policy: This origin is not allowed: ' + origin));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// app.use(cors()); // allow all origins for debugging (dev only)
+// Ensure preflight (OPTIONS) requests are handled
+app.options('*', cors());
 
-// simple request logger to confirm requests are arriving
+// Simple request logger to confirm requests are arriving
 app.use((req, res, next) => {
   console.log(`➡️ ${new Date().toISOString()} ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin}`);
   next();
 });
 
-// ✅ SIGNUP ROUTE
+// --- Signup route ---
 app.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
   console.log('/signup handler body:', req.body);
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'name, email and password are required' });
+  }
 
   try {
     // Check if user already exists
@@ -53,7 +72,7 @@ app.post('/signup', async (req, res) => {
     // Create JWT token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email },
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY || 'fallback_secret_key',
       { expiresIn: '7d' }
     );
 
@@ -68,9 +87,13 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// ✅ LOGIN ROUTE
+// --- Login route ---
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'email and password are required' });
+  }
 
   try {
     // Check if user exists
@@ -88,31 +111,42 @@ app.post('/login', async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY || 'fallback_secret_key',
       { expiresIn: '7d' }
     );
-    
-    // refresh token
+
+    // refresh token (optional)
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.REFRESH_KEY,
+      process.env.REFRESH_KEY || 'fallback_refresh_key',
       { expiresIn: '30d' }
-    )
+    );
 
-    // Return token
+    // Return token(s)
     return res.status(200).json({
       message: "Login successful",
-      token,refreshToken,
+      token,
+      refreshToken,
     });
   } catch (err) {
     console.error("Login error:", err);
-
     return res.status(500).json({ message: "Login Failed" });
   }
 });
 
+// --- Global error handler (including CORS origin errors) ---
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err && err.message ? err.message : err);
+  if (err && err.message && err.message.startsWith('CORS policy')) {
+    return res.status(403).json({ message: err.message });
+  }
+  // generic fallback
+  res.status(500).json({ message: 'Internal Server Error' });
+});
+
 // Start server
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log('Allowed origins:', allowedOrigins);
 });
