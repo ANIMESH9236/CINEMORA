@@ -11,44 +11,41 @@ const app = express();
 
 app.use(express.json());
 
-// --- CORS setup ---
-// You can set ALLOWED_ORIGINS in .env as a comma-separated list, e.g.
-// ALLOWED_ORIGINS=https://cinemora-d2k2.vercel.app,https://cinemora-jumy.onrender.com,http://localhost:5173
-const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://cinemora-d2k2.vercel.app,https://cinemora-jumy.onrender.com,http://localhost:5173';
-const allowedOrigins = rawAllowed.split(',').map(s => s.trim()).filter(Boolean);
+// allow multiple trusted origins (no trailing slashes)
+const allowedOrigins = [
+  'https://cinemora-d2k2.vercel.app',
+  'https://cinemora-jumy.onrender.com',
+  'http://localhost:5173' // add local dev URL if you're testing locally
+];
 
-// CORS middleware with explicit origin check (no trailing slashes)
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin (curl, mobile apps, server-to-server)
+    // allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
+    } else {
+      return callback(new Error('CORS policy: This origin is not allowed: ' + origin));
     }
-    // If origin is not allowed, return an error (caught by error handler below)
-    return callback(new Error('CORS policy: This origin is not allowed: ' + origin));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET','POST','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
-// Ensure preflight (OPTIONS) requests are handled
+// make sure preflight (OPTIONS) is handled
 app.options('*', cors());
 
-// Simple request logger to confirm requests are arriving
+
+// simple request logger to confirm requests are arriving
 app.use((req, res, next) => {
   console.log(`➡️ ${new Date().toISOString()} ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin}`);
   next();
 });
 
-// --- Signup route ---
+// ✅ SIGNUP ROUTE
 app.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
   console.log('/signup handler body:', req.body);
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'name, email and password are required' });
-  }
 
   try {
     // Check if user already exists
@@ -72,7 +69,7 @@ app.post('/signup', async (req, res) => {
     // Create JWT token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email },
-      process.env.SECRET_KEY || 'fallback_secret_key',
+      process.env.SECRET_KEY,
       { expiresIn: '7d' }
     );
 
@@ -87,13 +84,9 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// --- Login route ---
+// ✅ LOGIN ROUTE
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'email and password are required' });
-  }
 
   try {
     // Check if user exists
@@ -111,42 +104,31 @@ app.post('/login', async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.SECRET_KEY || 'fallback_secret_key',
+      process.env.SECRET_KEY,
       { expiresIn: '7d' }
     );
-
-    // refresh token (optional)
+    
+    // refresh token
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.REFRESH_KEY || 'fallback_refresh_key',
+      process.env.REFRESH_KEY,
       { expiresIn: '30d' }
-    );
+    )
 
-    // Return token(s)
+    // Return token
     return res.status(200).json({
       message: "Login successful",
-      token,
-      refreshToken,
+      token,refreshToken,
     });
   } catch (err) {
     console.error("Login error:", err);
+
     return res.status(500).json({ message: "Login Failed" });
   }
-});
-
-// --- Global error handler (including CORS origin errors) ---
-app.use((err, req, res, next) => {
-  console.error('Global error handler:', err && err.message ? err.message : err);
-  if (err && err.message && err.message.startsWith('CORS policy')) {
-    return res.status(403).json({ message: err.message });
-  }
-  // generic fallback
-  res.status(500).json({ message: 'Internal Server Error' });
 });
 
 // Start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log('Allowed origins:', allowedOrigins);
 });
