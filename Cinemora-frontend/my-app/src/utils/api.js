@@ -1,8 +1,8 @@
-import axios from 'axios';
+// import axios from 'axios';
 
-const API = axios.create({
-  baseURL: 'https://cinemora-jumy.onrender.com', // backend root
-  headers: { 'Content-Type': 'application/json' }
-});
+// const API = axios.create({
+//   baseURL: 'https://cinemora-jumy.onrender.com', // backend root
+//   headers: { 'Content-Type': 'application/json' }
+// });
 
-export default API;
+// export default API;
