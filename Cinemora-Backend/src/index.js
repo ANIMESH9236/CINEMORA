@@ -11,12 +11,14 @@ const app = express();
 
 app.use(express.json());
 
-// Allow your frontend (Vite default: localhost:5173)
+// Use env var (ensure it includes protocol e.g. https://cinemora-eight.vercel.app)
+const allowedOrigin = process.env.ALLOWED_ORIGINS || 'https://cinemora-eight.vercel.app';
 app.use(cors({
-  origin: 'https://cinemora-eight.vercel.app',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: allowedOrigin,
+  methods: ['GET','POST'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
+
 
 // app.use(cors()); // allow all origins for debugging (dev only)
 
@@ -111,8 +113,12 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Start server
-const PORT = process.env.port;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+
+// Start server — use uppercase PORT and bind to 0.0.0.0 for Render
+const PORT = process.env.PORT || 8080;   // Render provides PORT (uppercase)
+const HOST = '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on ${HOST}:${PORT}`);
 });
+
