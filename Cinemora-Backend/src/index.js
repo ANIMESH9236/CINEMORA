@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 // Read allowed origins from env (comma-separated) or fallback to common ones for local dev
-const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://cinemora-d2k2.vercel.app,https://cinemora-jumy.onrender.com,http://localhost:5173';
+const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://cinemora-eight.vercel.app/';
 const allowedOrigins = rawAllowed.split(',').map(s => s.trim()).filter(Boolean);
 
 // CORS middleware with explicit origin check
