@@ -42,26 +42,23 @@ app.use((req, res, next) => {
 });
 
 // Robust CORS configuration
+// TEMPORARY — DEBUG ONLY
 app.use(cors({
   origin: (origin, callback) => {
-    // allow non-browser clients (curl, Postman) which send no origin
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    // allow everything temporarily — browser origin will be echoed in response
+    return callback(null, true);
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true // keep true if frontend uses cookies; set false if not
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  credentials: true
 }));
 
-// Lightweight preflight responder (avoids using app.options('*', ...) which can crash some routers)
+// quick preflight responder
 app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    // Respond to preflight quickly. CORS headers are already added by cors() above.
-    return res.sendStatus(204);
-  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
 
 // Rate limiting
 const limiter = rateLimit({
