@@ -99,7 +99,16 @@ module.exports = app;
 // Start server (only if not in test mode)
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 5001;
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
+  const HOST = '0.0.0.0'; // IMPORTANT for Render
+  app.listen(PORT, HOST, () => {
+    console.log(`✅ Server running on http://${HOST}:${PORT}`);
   });
 }
+
+
+// if (process.env.NODE_ENV !== 'test') {
+//   const PORT = process.env.PORT || 5001;
+//   app.listen(PORT, () => {
+//     console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
+//   });
+// }
