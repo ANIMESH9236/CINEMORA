@@ -52,7 +52,7 @@ app.use(cors({
 }));
 
 // Ensure preflight (OPTIONS) is handled for all routes
-app.options('*', cors());
+// app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
