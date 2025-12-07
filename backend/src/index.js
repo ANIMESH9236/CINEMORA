@@ -15,6 +15,9 @@ const adminSeriesRoutes = require('./routes/adminSeriesRoutes');
 
 const app = express();
 
+// Trust the first proxy (Render/Heroku style) so req.ip and express-rate-limit use X-Forwarded-For safely
+app.set('trust proxy', 1);
+
 // --- Helper: normalize FRONTEND_URL env (strip quotes, add protocol if missing) ---
 function normalizeOrigin(raw) {
   if (!raw) return null;
@@ -48,11 +51,17 @@ app.use(cors({
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true // set to false if you do not send cookies/credentials from client
+  credentials: true // keep true if frontend uses cookies; set false if not
 }));
 
-// Ensure preflight (OPTIONS) is handled for all routes
-// app.options('*', cors());
+// Lightweight preflight responder (avoids using app.options('*', ...) which can crash some routers)
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // Respond to preflight quickly. CORS headers are already added by cors() above.
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Rate limiting
 const limiter = rateLimit({
