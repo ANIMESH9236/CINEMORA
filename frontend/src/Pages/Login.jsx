@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar/Navbar'
 import Footer from '../components/Footer/Footer'
 import './CSS/LoginSignup.css'
 
+
 function Login() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({ email: "", password: "" })

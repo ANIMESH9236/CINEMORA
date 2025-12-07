@@ -15,20 +15,50 @@ const adminSeriesRoutes = require('./routes/adminSeriesRoutes');
 
 const app = express();
 
+// --- Helper: normalize FRONTEND_URL env (strip quotes, add protocol if missing) ---
+function normalizeOrigin(raw) {
+  if (!raw) return null;
+  let v = raw.trim().replace(/^['"]+|['"]+$/g, ''); // strip surrounding quotes
+  if (!/^https?:\/\//i.test(v)) v = 'https://' + v; // default to https if protocol missing
+  v = v.replace(/\/$/, ''); // remove trailing slash
+  return v;
+}
+
+const frontendOrigin = normalizeOrigin(process.env.FRONTEND_URL) || 'http://localhost:5173';
+const allowedOrigins = [frontendOrigin, 'http://localhost:5173']; // add more if needed
+
 // Middleware
 app.use(express.json());
+
+// Small logger to surface incoming Origin header for debugging
+app.use((req, res, next) => {
+  if (req.headers.origin) {
+    console.log(`Incoming Origin: ${req.headers.origin}`);
+  }
+  next();
+});
+
+// Robust CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: (origin, callback) => {
+    // allow non-browser clients (curl, Postman) which send no origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true // set to false if you do not send cookies/credentials from client
 }));
+
+// Ensure preflight (OPTIONS) is handled for all routes
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
-
 app.use('/api/', limiter);
 
 // Request logger
@@ -56,11 +86,11 @@ app.use(errorHandler);
 
 // Export app for testing
 module.exports = app;
-    
+
 // Start server (only if not in test mode)
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
-});
+  });
 }

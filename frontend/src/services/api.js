@@ -11,7 +11,7 @@ const api = axios.create({
     'Content-Type': 'application/json'
   }
 });
-
+console.log(api)
 // Request interceptor - Add token to requests
 api.interceptors.request.use(
   (config) => {
